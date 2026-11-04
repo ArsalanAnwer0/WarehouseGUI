@@ -1,18 +1,14 @@
 # Warehouse FSM
 
-## Requirements
-Use Java 16 or newer. The backend uses Java records.
-## Compile and run
-From this folder, run:
 ```sh
 javac -d out *.java
 ```
 In Codespaces or another Bash terminal:
 ```sh
 read -rsp 'Clerk password: ' WAREHOUSE_CLERK_PASSWORD; echo
-export WAREHOUSE_CLERK_PASSWORD
+export WAREHOUSE_CLERK_PASSWORD //Enter password you want to use
 read -rsp 'Manager password: ' WAREHOUSE_MANAGER_PASSWORD; echo
-export WAREHOUSE_MANAGER_PASSWORD
+export WAREHOUSE_MANAGER_PASSWORD //Enter password you want to use (make it different from the other)
 java -cp out WarehouseContext
 
 Then
@@ -23,5 +19,7 @@ To run a GUI program we go gback to the codespace tab, start a new bash shell, a
 export DISPLAY=:1
 Then we can run the java program and see the GUI in the other tab.
 java -cp out WarehouseGui.java
+
+Password for noVNC: Warehouse1
 ```
 I
