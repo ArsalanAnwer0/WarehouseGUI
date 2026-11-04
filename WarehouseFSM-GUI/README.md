@@ -7,17 +7,6 @@ From this folder, run:
 ```sh
 javac -d out *.java
 ```
-`WarehouseContext` is the entry point. Compiled `.class` files go into `out/`
-and are excluded from Git.
-## Clerk and Manager passwords
-```sh
-read -s "WAREHOUSE_CLERK_PASSWORD?Clerk password: "
-export WAREHOUSE_CLERK_PASSWORD
-read -s "WAREHOUSE_MANAGER_PASSWORD?Manager password: "
-export WAREHOUSE_MANAGER_PASSWORD
-echo
-java -cp out WarehouseContext
-```
 In Codespaces or another Bash terminal:
 ```sh
 read -rsp 'Clerk password: ' WAREHOUSE_CLERK_PASSWORD; echo
@@ -25,5 +14,14 @@ export WAREHOUSE_CLERK_PASSWORD
 read -rsp 'Manager password: ' WAREHOUSE_MANAGER_PASSWORD; echo
 export WAREHOUSE_MANAGER_PASSWORD
 java -cp out WarehouseContext
+
+Then
+
+websockify --web=/usr/share/novnc/ 6080 localhost:5901
+This is then opened in the new browser tab; navigate to that tab, click on vnc.html, and connect with your password. Since there is no GUI program running it will say there is nothing to display. That is okay.
+To run a GUI program we go gback to the codespace tab, start a new bash shell, and navigate to the program we want to run, compile etc. Then we set up the display:
+export DISPLAY=:1
+Then we can run the java program and see the GUI in the other tab.
+java -cp out WarehouseGui.java
 ```
 I
