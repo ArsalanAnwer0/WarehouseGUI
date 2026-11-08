@@ -9,7 +9,6 @@ read -rsp 'Clerk password: ' WAREHOUSE_CLERK_PASSWORD; echo
 export WAREHOUSE_CLERK_PASSWORD //Enter password you want to use
 read -rsp 'Manager password: ' WAREHOUSE_MANAGER_PASSWORD; echo
 export WAREHOUSE_MANAGER_PASSWORD //Enter password you want to use (make it different from the other)
-java -cp out WarehouseContext
 
 Then
 
