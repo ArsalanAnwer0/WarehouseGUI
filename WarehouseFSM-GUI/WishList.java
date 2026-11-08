@@ -1,3 +1,4 @@
+
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -23,7 +24,7 @@ public class WishList {
         WishListItem existing =
             findProduct(product.getProductID());
 
-        if (existing != null) { //If product exists, sets quantity
+        if (existing != null) {
             existing.setQuantity(quantity);
             return true;
         }
@@ -36,107 +37,92 @@ public class WishList {
         return true;
     }
 
-    // Split each request into immediately purchased and waitlisted quantities.
+    // Automatically purchase available quantities
+    // and waitlist quantities that are unavailable.
     public void purchase() {
-    if (items.isEmpty()) {
-        System.out.println("No Items In Wishlist");
-        return;
-    }
 
-    Transaction transaction = null;
-    Iterator<WishListItem> iterator = items.iterator();
+        if (items.isEmpty()) {
+            System.out.println("No Items In Wishlist");
+            return;
+        }
 
-    while (iterator.hasNext()) {
-        WishListItem item = iterator.next();
-        Product product = item.getProduct();
+        Transaction transaction = null;
 
-        System.out.println("\n===== PRODUCT =====");
-        System.out.println("Product: " + product.getName());
-        System.out.println("ID: " + product.getProductID());
-        System.out.println("Wishlist quantity: " + item.getQuantity());
-        System.out.println("Available stock: " + product.getQuantity());
+        Iterator<WishListItem> iterator = items.iterator();
 
-        int requestedQuantity = -1;
-        while (requestedQuantity < 0
-                || requestedQuantity > item.getQuantity()) {
-            System.out.print(
-                "Quantity to purchase (0 to skip): "
+        while (iterator.hasNext()) {
+
+            WishListItem item = iterator.next();
+            Product product = item.getProduct();
+
+            int requestedQuantity = item.getQuantity();
+
+            System.out.println("\n===== PRODUCT =====");
+            System.out.println("Product: " + product.getName());
+            System.out.println("ID: " + product.getProductID());
+            System.out.println("Requested quantity: " + requestedQuantity);
+            System.out.println("Available stock: " + product.getQuantity());
+
+            int purchasedQuantity = Math.min(
+                requestedQuantity,
+                product.getQuantity()
             );
 
-            String input = WarehouseContext.readLine().trim();
+            int waitlistedQuantity =
+                requestedQuantity - purchasedQuantity;
 
-            try {
-                requestedQuantity = Integer.parseInt(input);
-            } catch (NumberFormatException e) {
-                System.out.println("Enter a valid whole number.");
-                continue;
-            }
+            // Process purchased quantity.
+            if (purchasedQuantity > 0) {
 
-            if (requestedQuantity < 0
-                    || requestedQuantity > item.getQuantity()) {
+                if (transaction == null) {
+                    transaction = new Transaction(client.getID());
+                }
+
+                transaction.addProductToTransaction(
+                    product.getSalePrice(),
+                    product.getProductID(),
+                    purchasedQuantity
+                );
+
+                product.removeQuantity(purchasedQuantity);
+
                 System.out.println(
-                    "Enter a quantity between 0 and "
-                    + item.getQuantity()
+                    "Purchased " + purchasedQuantity
+                    + " of " + product.getName()
                 );
             }
-        }
 
-        if (requestedQuantity == 0) {
-            continue;
-        }
+            // Process unavailable quantity.
+            if (waitlistedQuantity > 0) {
 
-        int purchasedQuantity = Math.min(
-            requestedQuantity,
-            product.getQuantity()
-        );
+                product.addToWaitlist(
+                    client,
+                    waitlistedQuantity
+                );
 
-        int waitlistedQuantity =
-            requestedQuantity - purchasedQuantity;
-
-        if (purchasedQuantity > 0) {
-            if (transaction == null) {
-                transaction = new Transaction(client.getID());
+                System.out.println(
+                    "Waitlisted " + waitlistedQuantity
+                    + " of " + product.getName()
+                );
             }
 
-            transaction.addProductToTransaction(
-                product.getSalePrice(),
-                product.getProductID(),
-                purchasedQuantity
-            );
-
-            product.removeQuantity(purchasedQuantity);
-
-            System.out.println(
-                "Purchased " + purchasedQuantity
-                + " of " + product.getName()
-            );
-        }
-
-        if (waitlistedQuantity > 0) {
-            product.addToWaitlist(client, waitlistedQuantity);
-
-            System.out.println(
-                "Waitlisted " + waitlistedQuantity
-                + " of " + product.getName()
-            );
-        }
-
-        int remainingQuantity =
-            item.getQuantity() - requestedQuantity;
-
-        if (remainingQuantity == 0) {
+            // Remove processed item from wishlist.
             iterator.remove();
-        } else {
-            item.setQuantity(remainingQuantity);
         }
-    }
 
-    if (transaction != null) {
-        client.addTransaction(transaction);
-        client.charge(transaction.getTotalCost());
-        System.out.println(transaction);
+        // Save transaction and update client balance.
+        if (transaction != null) {
+
+            client.addTransaction(transaction);
+
+            client.charge(transaction.getTotalCost());
+
+            System.out.println("\n===== ORDER SUMMARY =====");
+            System.out.println(transaction);
+        }
+
+        System.out.println("\nOrder processing completed.");
     }
-}
 
     public WishListItem findProduct(String productID) {
 
@@ -182,15 +168,30 @@ public class WishList {
 
     @Override
     public String toString() {
+
         StringBuilder productsString = new StringBuilder();
+
         productsString.append("\n===== WISHLIST =====\n");
+
         for (WishListItem item : items) {
+
             Product product = item.getProduct();
-            productsString.append("Name: ").append(product.getName()).append("\n");
-            productsString.append("ID: ").append(product.getProductID()).append("\n");
-            productsString.append("SalePrice: ").append(product.getSalePrice()).append("\n");
-            productsString.append("Quantity: ").append(item.getQuantity()).append("\n----------\n"); //Different Quantity than product Quantity.
+
+            productsString.append("Name: ")
+                .append(product.getName()).append("\n");
+
+            productsString.append("ID: ")
+                .append(product.getProductID()).append("\n");
+
+            productsString.append("SalePrice: ")
+                .append(product.getSalePrice()).append("\n");
+
+            productsString.append("Quantity: ")
+                .append(item.getQuantity()).append("\n");
+
+            productsString.append("----------\n");
         }
+
         return productsString.toString();
     }
 }
