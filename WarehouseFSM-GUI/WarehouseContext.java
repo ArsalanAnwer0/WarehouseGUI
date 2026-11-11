@@ -12,6 +12,7 @@ public class WarehouseContext {
     public static final int CLIENT = 1;
     public static final int CLERK = 2;
     public static final int MANAGER = 3;
+    public static final int WISHLIST = 4;
 
     // TRANSITION EVENT CONSTANTS
     public static final int TO_LOGIN = 0;
@@ -19,6 +20,7 @@ public class WarehouseContext {
     public static final int TO_CLERK = 2;
     public static final int TO_MANAGER = 3;
     public static final int EXIT = 4;
+    public static final int TO_WISHLIST = 5;
 
     // LOGIN ROLE CONSTANTS
     public static final int ROLE_NONE = -1;
@@ -59,30 +61,21 @@ public class WarehouseContext {
     private WarehouseContext() {
 
         // Create the state array
-        states = new WarehouseState[4];
+        states = new WarehouseState[5];
 
         states[LOGIN] = LoginState.instance();
         states[CLIENT] = ClientMenuState.instance();
         states[CLERK] = ClerkMenuState.instance();
         states[MANAGER] = ManagerMenuState.instance();
+        states[WISHLIST] = WishlistMenuState.instance();
 
-        // Initialize the transition matrix
         nextState = new int[][] {
-
-            // TO_LOGIN, TO_CLIENT, TO_CLERK,
-            // TO_MANAGER, EXIT
-
-            { INVALID, CLIENT, CLERK, MANAGER,
-              EXIT_STATE }, // LOGIN
-
-            { LOGIN, INVALID, CLERK, INVALID,
-              INVALID }, // CLIENT
-
-            { LOGIN, CLIENT, INVALID, MANAGER,
-              INVALID }, // CLERK
-
-            { LOGIN, INVALID, CLERK, INVALID,
-              INVALID } // MANAGER
+            // TO_LOGIN, TO_CLIENT, TO_CLERK, TO_MANAGER, EXIT, TO_WISHLIST
+            { INVALID, CLIENT, CLERK, MANAGER, EXIT_STATE, INVALID }, // LOGIN
+            { LOGIN, INVALID, CLERK, INVALID, INVALID, WISHLIST },    // CLIENT
+            { LOGIN, CLIENT, INVALID, MANAGER, INVALID, INVALID },   // CLERK
+            { LOGIN, INVALID, CLERK, INVALID, INVALID, INVALID },    // MANAGER
+            { LOGIN, CLIENT, CLERK, INVALID, INVALID, INVALID }      // WISHLIST
         };
 
         // Set initial state
@@ -195,7 +188,6 @@ public class WarehouseContext {
     }
 
     // LOGIN ROLE GETTER AND SETTER
-    // =====================================
 
     public int getLoginRole() {
         return loginRole;
@@ -214,14 +206,12 @@ public class WarehouseContext {
         loginRole = role;
     }
 
-    // =====================================
     // CHANGE STATE USING MATRIX
-    // =====================================
 
     public void changeState(int event) {
 
         // Check whether event is valid
-        if (event < TO_LOGIN || event > EXIT) {
+        if (event < TO_LOGIN || event > TO_WISHLIST) {
             System.out.println("Invalid transition event.");
             return;
         }
@@ -248,7 +238,7 @@ public class WarehouseContext {
         }
 
         // Client state requires a client ID
-        if (destination == CLIENT) {
+        if (destination == CLIENT || destination == WISHLIST) {
 
             if (clientID == null ||
                     clientID.trim().isEmpty()) {
@@ -265,9 +255,10 @@ public class WarehouseContext {
             }
         }
 
-        // Clear client ID when leaving Client state
-        if (currentState == CLIENT &&
-                destination != CLIENT) {
+        // Clear the client only when leaving both client-related screens.
+        if ((currentState == CLIENT || currentState == WISHLIST)
+                && destination != CLIENT
+                && destination != WISHLIST) {
 
             clientID = null;
         }
@@ -296,7 +287,7 @@ public class WarehouseContext {
     // Return to the role that entered the current menu, or to login.
     public void logout() {
 
-        if (currentState == CLIENT) {
+        if (currentState == CLIENT || currentState == WISHLIST) {
 
             if (loginRole == ROLE_CLIENT) {
 

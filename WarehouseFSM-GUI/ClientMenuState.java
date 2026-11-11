@@ -102,96 +102,10 @@ public class ClientMenuState extends WarehouseState {
         warehouse.viewClientInvoices(client);
     }
 
-
-    // ADD PRODUCT TO WISHLIST
-
-
-    // Validate the product and quantity before updating the wishlist.
-    private void addToWishlist() {
-
-        Client client = getCurrentClient();
-
-        if (client == null) {
-            return;
-        }
-
-
-        String productID =
-            WarehouseContext.prompt("Enter Product ID: ").trim();
-
-        Product product =
-            warehouse.getInventory()
-                    .findProductByID(productID);
-
-        if (product == null) {
-            System.out.println("Product not found.");
-            return;
-        }
-
-
-        int quantity;
-
-        try {
-            quantity = Integer.parseInt(
-                WarehouseContext.prompt("Enter quantity: ").trim()
-            );
-        } catch (NumberFormatException e) {
-            System.out.println("Invalid quantity.");
-            return;
-        }
-
-        if (quantity <= 0) {
-            System.out.println(
-                "Quantity must be greater than zero."
-            );
-            return;
-        }
-
-        // Call existing warehouse backend
-        boolean added = warehouse.addProductWishlist(
-            client,
-            product,
-            quantity
-        );
-
-        System.out.println(added
-            ? "Product added to wishlist."
-            : "Unable to update wishlist. Check the quantity and try again.");
-    }
-
-
-    // DISPLAY WISHLIST
-
-
-    private void showWishlist() {
-
-        Client client = getCurrentClient();
-
-        if (client == null) {
-            return;
-        }
-
-        warehouse.displayWishlist(client);
-    }
-
-
-    // PLACE ORDER
-
-
-    // Delegate purchase and stock/waitlist processing to the backend.
-    private void placeOrder() {
-
-        Client client = getCurrentClient();
-
-        if (client == null) {
-            return;
-        }
-
-        System.out.println(
-            "\n===== PLACE ORDER ====="
-        );
-
-        warehouse.processClientOrder(client);
+    private void openWishlistOperations() {
+    WarehouseContext.instance().changeState(
+        WarehouseContext.TO_WISHLIST
+    );
     }
 
 
@@ -217,9 +131,7 @@ public class ClientMenuState extends WarehouseState {
             new Action("Show Client Details", this::showClientDetails),
             new Action("Show Products", this::showProducts),
             new Action("Show Transactions", this::showTransactions),
-            new Action("Add Product to Wishlist", this::addToWishlist),
-            new Action("Display Wishlist", this::showWishlist),
-            new Action("Place Order", this::placeOrder),
+            new Action("Wishlist Operations", this::openWishlistOperations),
             new Action("Logout", this::logout)
         );
     }
